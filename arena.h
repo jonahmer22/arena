@@ -16,6 +16,16 @@
 // data structures
 // ===============
 
+// MemBlock functions as a singly-linked list node
+// it holds a rawblock of memory along with metadata for size, current inuse bytes
+typedef struct MemBlock{
+    char *buffer;   // start of the block
+    size_t size;    // total bytes in buffer (default BUFF_SIZE)
+    size_t head;    // which byte the arena has filled to (like a drive head on hdd)
+
+    struct MemBlock *nextBlock; // next block of memory
+} MemBlock;
+
 // Arena functions as a singly-linked list with head and tail pointers
 // nodes are MemBlocks, and the total number of blocks are stored in numBlocks
 typedef struct Arena{
