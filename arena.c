@@ -64,6 +64,13 @@ static inline MemBlock* memBlockDestroy(MemBlock* memBlock){
 	MemBlock *temp = memBlock->nextBlock;
 	
 	free(memBlock->buffer);
+	memBlock->buffer = NULL;
+
+	memBlock->size = 0;
+	memBlock->head = 0;
+
+	memBlock->nextBlock = NULL;
+
 	free(memBlock);
 	
 	return temp;
@@ -95,20 +102,36 @@ inline Arena* arenaLocalInit(){
 
 // Destroys and frees all associated memory with a Arena passed in as an arguement
 inline void arenaLocalDestroy(Arena *larena){
-	if(larena != NULL){
-		MemBlock* temp = larena->head;
-		for(; temp != NULL;){
-			temp = memBlockDestroy(temp);
-		}
-		free(larena);
-		
-		return;
+	if(!larena){
+		perror("[FATAL]: Cannot destroy uninitialized arena.");
+
+		exit(13);
 	}
+
+	MemBlock* temp = larena->head;
+	for(; temp != NULL;){
+		temp = memBlockDestroy(temp);
+	}
+
+	larena->head = NULL;
+	larena->tail = NULL;
+
+	larena->numBlocks = 0;
+
+	free(larena);
+	
+	return;
 }
 
 // Frees all memory associated with arena passed as arguement except the original BUFF_SIZE MemBlock and resets all heads to the base of the block
 // returns a pointer to the Arena passed as arguement, which is optional to use
 inline Arena* arenaLocalReset(Arena *larena){
+	if(!larena){
+		perror("[FATAL]: Cannot reset uninitialized arena.");
+
+		exit(14);
+	}
+	
 	MemBlock* temp = larena->head->nextBlock;
 	for(; temp != NULL;){
 		temp = memBlockDestroy(temp);
@@ -126,6 +149,12 @@ inline Arena* arenaLocalReset(Arena *larena){
 // Returns a pointer to the base of a block of memory numBytes in size
 // increments all Arena head pointers and allocates extra memory if needed to the Arena passed as an arguement
 inline void* arenaLocalAlloc(Arena *larena, size_t numBytes){
+	if(!larena){
+		perror("[FATAL]: Cannot allocate to uninitialized arena.");
+
+		exit(15);
+	}
+
 	numBytes = ROUND_UP(numBytes, ARENA_ALIGN);
 
 	if(numBytes > BUFF_SIZE){
@@ -158,6 +187,12 @@ inline void* arenaLocalAlloc(Arena *larena, size_t numBytes){
 // Allocates a BUFF_SIZE MemBlock
 // a pointer is returned to the base of the MemBlock and it is marked as full to the Arena passed as an arguement
 inline void* arenaLocalAllocBuffsizeBlock(Arena *larena){
+	if(!larena){
+		perror("[FATAL]: Cannot allocate to uninitialized arena.");
+
+		exit(16);
+	}
+
 	larena->tail = memBlockAddAlignedBuff(larena->tail);
 
 	void* ptr = larena->tail->buffer + larena->tail->head;
@@ -173,7 +208,9 @@ inline void* arenaLocalAllocBuffsizeBlock(Arena *larena){
 // Initializes the global Arena with an empty BUFF_SIZE MemBlock
 // returns a pointer to the global Arena, which is optional to use
 inline Arena* arenaInit(){
-	arena = arenaLocalInit();
+	if(!arena){
+		arena = arenaLocalInit();
+	}
 
 	return arena;
 }
@@ -192,12 +229,22 @@ inline Arena* arenaReset(){
 // Returns a pointer to the base of a block of memory numBytes in size
 // increments all global Arena head pointers and allocates extra memory if needed
 inline void* arenaAlloc(size_t numBytes){
+	if(!arena){
+		// because we know the arena instead of just printing an error and exiting we can create it for the user
+		arenaInit();
+	}
+
 	return arenaLocalAlloc(arena, numBytes);    
 }
 
 // Allocates a BUFF_SIZE MemBlock
 // a pointer is returned to the base of the MemBlock and it is marked as full to the Arena
 inline void* arenaAllocBuffsizeBlock(){
+	if(!arena){
+		// can initialize the arena for the user as we know which one they intend to use
+		arenaInit();
+	}
+	
 	return arenaLocalAllocBuffsizeBlock(arena);
 }
 
