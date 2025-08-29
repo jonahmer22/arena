@@ -4,11 +4,15 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and follows [Semantic Versioning](https://semver.org/) (0.x indicates initial development).
 
-## [v1.0] - 2025-08-19
+## [v1.01] - 2025-08-29
 ### Changed
-- Initial Commit of arena.h and arena.c including basic functionality for the library uploaded to repo.
+- Arena has more safety gaurds.
+- Arena attempts to alloc at least twice before faulting.
+- The global arena does not have to be explicitly initialized anymore (must still be destroyed though).
+- Compressed functionality into fewer lines.
+- inlined all functions to allow for a (slight) performance increase.
 ### Added
-- Added both a global and "local" API allowing for use of multiple independant arenas simultaneously within the same program.
+- Safe gaurds to prevent missuse and redundant allocation attempts.
 ##### Global:
 - `arenaInit()`: Initializes global arena with one empty BUFF_SIZE (1MB by default) block of memory.
 - `arenaAlloc(size_t size)`: Drop in replacement for malloc() call, allocates to global arena
