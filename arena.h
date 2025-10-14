@@ -59,7 +59,7 @@ void* arenaAlloc(size_t numBytes);
 void* arenaAllocBuffsizeBlock();
 
 // Returns only whether the arena has been created in the form of a int 1 = true, 0 = false
-int arenaIsIntialized();
+int arenaIsInitialized();
 
 // =====
 // local
