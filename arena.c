@@ -201,6 +201,12 @@ inline void* arenaLocalAllocBuffsizeBlock(Arena *larena){
 	return ptr;
 }
 
+// Returns only whether a given arena has been created in the form of a int 1 = true, 0 = false
+// an Arena* must be passed as an arguement
+int arenaLocalIsInitialized(Arena* larena){
+	return larena ? 1 : 0;
+}
+
 // ======
 // global
 // ======
@@ -248,3 +254,7 @@ inline void* arenaAllocBuffsizeBlock(){
 	return arenaLocalAllocBuffsizeBlock(arena);
 }
 
+// Returns only whether the arena has been created in the form of a int 1 = true, 0 = false
+int arenaIsInitialized(){
+	return arenaLocalIsInitialized(arena);
+}

@@ -58,6 +58,9 @@ void* arenaAlloc(size_t numBytes);
 // a pointer is returned to the base of the MemBlock and it is marked as full to the Arena
 void* arenaAllocBuffsizeBlock();
 
+// Returns only whether the arena has been created in the form of a int 1 = true, 0 = false
+int arenaIsIntialized();
+
 // =====
 // local
 // =====
@@ -80,5 +83,9 @@ void* arenaLocalAlloc(Arena *arena, size_t numBytes);
 // Allocates a BUFF_SIZE MemBlock
 // a pointer is returned to the base of the MemBlock and it is marked as full to the Arena passed as an arguement
 void* arenaLocalAllocBuffsizeBlock(Arena *larena);
+
+// Returns only whether a given arena has been created in the form of a int 1 = true, 0 = false
+// an Arena* must be passed as an argeuement to the arena
+int arenaLocalIsInitialized(Arena* larena);
 
 #endif
