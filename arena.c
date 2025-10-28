@@ -137,9 +137,9 @@ inline Arena* arenaLocalReset(Arena *larena){
 		temp = memBlockDestroy(temp);
 	}
 
-	arena->head->nextBlock = NULL;
-	arena->tail = arena->head;
-	arena->head = 0;
+	larena->head->nextBlock = NULL;
+	larena->tail = larena->head;
+	larena->head = 0;
 
 	memset(larena->head->buffer, 0, BUFF_SIZE);
 
