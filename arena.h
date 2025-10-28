@@ -2,13 +2,14 @@
 #define ARENA_H
 
 #include <stddef.h>
+#include <stdalign.h>
 
 // ==================
 // definition section
 // ==================
 
 #define BUFF_SIZE (size_t)(1024 * 1024) // 1mb by default
-#define ARENA_ALIGN alignof(max_align_t)    // alignment (16 bits on most systems)
+#define ARENA_ALIGN alignof(max_align_t)    // alignment (typically 16 bytes on most systems)
 #define ROUND_UP(needed, align) \
     (((needed) + ((align) - 1)) & ~((align) - 1))   // rounding for memory alignment
 
@@ -41,14 +42,14 @@ typedef struct Arena{
 
 // Initializes the global Arena with an empty BUFF_SIZE MemBlock
 // returns a pointer to the global Arena, which is optional to use
-Arena* arenaInit();
+Arena* arenaInit(void);
 
 // Destroys and frees all associated memory with the global Arena
-void arenaDestroy();
+void arenaDestroy(void);
 
 // Frees all memory in the global arena except the original BUFF_SIZE MemBlock and resets all heads to the base of the block
 // returns a pointer to the global Arena, which is optional to use
-Arena* arenaReset();
+Arena* arenaReset(void);
 
 // Returns a pointer to the base of a block of memory numBytes in size
 // increments all global Arena head pointers and allocates extra memory if needed
@@ -56,10 +57,10 @@ void* arenaAlloc(size_t numBytes);
 
 // Allocates a BUFF_SIZE MemBlock
 // a pointer is returned to the base of the MemBlock and it is marked as full to the Arena
-void* arenaAllocBuffsizeBlock();
+void* arenaAllocBuffsizeBlock(void);
 
 // Returns only whether the arena has been created in the form of a int 1 = true, 0 = false
-int arenaIsInitialized();
+int arenaIsInitialized(void);
 
 // =====
 // local
@@ -67,7 +68,7 @@ int arenaIsInitialized();
 
 // Initializes a Arena with an empty BUFF_SIZE MemBlock
 // returns a pointer to the Arena
-Arena* arenaLocalInit();
+Arena* arenaLocalInit(void);
 
 // Destroys and frees all associated memory with a Arena passed in as an arguement
 void arenaLocalDestroy(Arena *arena);
