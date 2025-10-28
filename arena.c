@@ -6,6 +6,18 @@
 #include <stdbool.h>
 #include <stdalign.h>
 
+// If the platform is unix or apple assuming you have mmap
+#if defined(__unix__) || defined(__APPLE__)
+#include <sys/mman.h>
+#include <unistd.h>
+#define ARENA_HAVE_MMAP 1
+#ifndef MAP_ANONYMOUS
+#define MAP_ANONYMOUS MAP_ANON
+#endif
+#else
+#define ARENA_HAVE_MMAP 0
+#endif
+
 // =======
 // private
 // =======
@@ -13,33 +25,65 @@
 // Global arena
 static Arena* arena;
 
-// Initializes an empty MemBlock of size `aligned_alloc` to align and returns a pointer to it
+#if ARENA_HAVE_MMAP
+static size_t arenaGetPageSize(void){
+	static size_t pageSize = 0;
+	if(pageSize == 0){
+		long ps = sysconf(_SC_PAGESIZE);
+		if(ps <= 0){
+			pageSize = 4096;
+		}
+		else{
+			pageSize = (size_t)ps;
+		}
+	}
+
+	return pageSize;
+}
+#endif
+
+// Initializes a MemBlock with an inline aligned buffer and returns a pointer to it
 static inline MemBlock* memBlockInit(size_t size, size_t align){
-	MemBlock *memBlock = malloc(sizeof(MemBlock));
+	size = ROUND_UP(size, align);
+	const size_t total = sizeof(MemBlock) + align - 1 + size;
+
+	MemBlock *memBlock = NULL;
+	size_t reserved = total;
+	unsigned char fromMmap = 0;
+
+#if ARENA_HAVE_MMAP
+	const size_t pageSize = arenaGetPageSize();
+	const size_t mapSize = ((total + pageSize - 1) / pageSize) * pageSize;
+	void *mapped = mmap(NULL, mapSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if(mapped != MAP_FAILED){
+		memBlock = (MemBlock*)mapped;
+		reserved = mapSize;
+		fromMmap = 1;
+	}
+#endif
+
 	if(!memBlock){
-		memBlock = malloc(sizeof(MemBlock));
+		memBlock = malloc(total);
 		if(!memBlock){
 			perror("[FATAL]: Could not allocate MemBlock.");
 
 			exit(10);
 		}
+
+		reserved = total;
+		fromMmap = 0;
 	}
 
-	size = ROUND_UP(size, align);
-	memBlock->buffer = aligned_alloc(align, size);
-	if(!memBlock->buffer){
-		memBlock->buffer = aligned_alloc(align, size);
-		if(!memBlock->buffer){
-			perror("[FATAL]: Could not allocate MemBlock buffer.");
-			free(memBlock);
+	uintptr_t bufStart = (uintptr_t)((unsigned char*)memBlock + sizeof(MemBlock));
+	uintptr_t aligned = (bufStart + (align - 1)) & ~((uintptr_t)align - 1);
 
-			exit(11);	
-		}
-	}
+	memBlock->buffer = (char*)aligned;
 
 	memBlock->nextBlock = NULL;
 	memBlock->head = 0;
 	memBlock->size = size;
+	memBlock->allocSize = reserved;
+	memBlock->fromMmap = fromMmap;
 
 	return memBlock;
 }
@@ -61,16 +105,22 @@ static inline MemBlock* memBlockAddAlignedBuff(MemBlock *memBlock){
 // Destroys and frees a MemBlock returning a pointer to the next one in the list
 static inline MemBlock* memBlockDestroy(MemBlock* memBlock){
 	MemBlock *temp = memBlock->nextBlock;
+	const size_t reserved = memBlock->allocSize;
+	const unsigned char fromMmap = memBlock->fromMmap;
 	
-	free(memBlock->buffer);
-	memBlock->buffer = NULL;
+#if ARENA_HAVE_MMAP
+	if(fromMmap){
+		if(munmap(memBlock, reserved) != 0){
+			perror("[FATAL]: Could not munmap MemBlock.");
 
-	memBlock->size = 0;
-	memBlock->head = 0;
-
-	memBlock->nextBlock = NULL;
-
-	free(memBlock);
+			exit(17);
+		}
+	}
+	else
+#endif
+	{
+		free(memBlock);
+	}
 	
 	return temp;
 }
@@ -84,12 +134,9 @@ static inline MemBlock* memBlockDestroy(MemBlock* memBlock){
 Arena* arenaLocalInit(void){
 	Arena *larena = malloc(sizeof(Arena));
 	if(!larena){
-		larena = malloc(sizeof(Arena));
-		if(!larena){
-			perror("[FATAL]: Could not allocate Arena.");
+		perror("[FATAL]: Could not allocate Arena.");
 
-			exit(12);
-		}
+		exit(12);
 	}
 	
 	larena->numBlocks = 1;

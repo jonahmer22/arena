@@ -23,6 +23,8 @@ typedef struct MemBlock{
     char *buffer;   // start of the block
     size_t size;    // total bytes in buffer (default BUFF_SIZE)
     size_t head;    // which byte the arena has filled to (like a drive head on hdd)
+    size_t allocSize;   // total bytes reserved for this block including metadata
+    unsigned char fromMmap; // 1 if allocated via mmap, 0 if via malloc
 
     struct MemBlock *nextBlock; // next block of memory
 } MemBlock;
