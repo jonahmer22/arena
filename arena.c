@@ -216,14 +216,14 @@ void* arenaLocalAlloc(Arena *larena, size_t numBytes){
 		// add on a new block and just add to there
 		larena->tail = memBlockAdd(larena->tail, BUFF_SIZE);
 		larena->numBlocks++;
-        
+		
 		void* ptr = larena->tail->buffer + larena->tail->head;
 		larena->tail->head += numBytes;
 
 		return ptr;
 	}
 	else{
-        	// if we can just fit it in our current block
+			// if we can just fit it in our current block
 		void* ptr = larena->tail->buffer + larena->tail->head;
 		larena->tail->head += numBytes;
 

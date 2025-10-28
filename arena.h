@@ -11,7 +11,7 @@
 #define BUFF_SIZE (size_t)(1024 * 1024) // 1mb by default
 #define ARENA_ALIGN alignof(max_align_t)    // alignment (typically 16 bytes on most systems)
 #define ROUND_UP(needed, align) \
-    (((needed) + ((align) - 1)) & ~((align) - 1))   // rounding for memory alignment
+	(((needed) + ((align) - 1)) & ~((align) - 1))   // rounding for memory alignment
 
 // ===============
 // data structures
@@ -20,22 +20,22 @@
 // MemBlock functions as a singly-linked list node
 // it holds a rawblock of memory along with metadata for size, current inuse bytes
 typedef struct MemBlock{
-    char *buffer;   // start of the block
-    size_t size;    // total bytes in buffer (default BUFF_SIZE)
-    size_t head;    // which byte the arena has filled to (like a drive head on hdd)
-    size_t allocSize;   // total bytes reserved for this block including metadata
-    unsigned char fromMmap; // 1 if allocated via mmap, 0 if via malloc
+	char *buffer;   // start of the block
+	size_t size;    // total bytes in buffer (default BUFF_SIZE)
+	size_t head;    // which byte the arena has filled to (like a drive head on hdd)
+	size_t allocSize;   // total bytes reserved for this block including metadata
+	unsigned char fromMmap; // 1 if allocated via mmap, 0 if via malloc
 
-    struct MemBlock *nextBlock; // next block of memory
+	struct MemBlock *nextBlock; // next block of memory
 } MemBlock;
 
 // Arena functions as a singly-linked list with head and tail pointers
 // nodes are MemBlocks, and the total number of blocks are stored in numBlocks
 typedef struct Arena{
-    MemBlock *head;
-    MemBlock *tail;
-    
-    int numBlocks;
+	MemBlock *head;
+	MemBlock *tail;
+	
+	int numBlocks;
 } Arena;
 
 // =======

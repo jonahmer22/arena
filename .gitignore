@@ -1,6 +1,14 @@
 # Prerequisites
 *.d
 
+# pytest
+env/
+__pycache__/
+.pytest_cache/
+
+# testing build
+build/
+
 # Object files
 *.o
 *.ko
