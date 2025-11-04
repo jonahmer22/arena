@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+# MacOS
+.DS_Store
+
 # pytest
 env/
 __pycache__/
